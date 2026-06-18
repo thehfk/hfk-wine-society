@@ -1,0 +1,1490 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HFK 와인 소사이어티 시음 기록</title>
+<style>
+  :root {
+    --hfk-red: #980000;
+    --hfk-red-soft: #f4ecec;
+    --text: #1a1a1a;
+    --muted: #666;
+    --line: #e5e5e5;
+    --line-strong: #d0d0d0;
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --soft: #f4f0f0;
+    --wine: #5a1a2c;
+    --gold: #c8961f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  header.top {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header.top h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--hfk-red);
+    letter-spacing: -0.01em;
+  }
+  header.top .sub {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button.primary, button.ghost, button.danger {
+    border: 0;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.primary { background: var(--hfk-red); color: #fff; }
+  button.primary:hover { background: #7a0000; }
+  button.primary:disabled { background: #ccc; cursor: not-allowed; }
+  button.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line-strong);
+    font-weight: 500;
+  }
+  button.ghost:hover { background: var(--soft); }
+  button.danger {
+    background: transparent;
+    color: var(--hfk-red);
+    border: 1px solid var(--hfk-red);
+  }
+  button.danger:hover { background: var(--hfk-red-soft); }
+  button.small { padding: 5px 10px; font-size: 12px; }
+  .admin-link {
+    color: var(--muted);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+  .admin-link:hover { color: var(--hfk-red); }
+  .admin-link.active { color: var(--hfk-red); font-weight: 600; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+  .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .view-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 4px;
+    width: fit-content;
+  }
+  .view-tab {
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    font-family: inherit;
+  }
+  .view-tab.active { background: var(--hfk-red); color: #fff; }
+  .view-tab:hover:not(.active) { background: var(--soft); }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toolbar input[type=search], .toolbar select {
+    padding: 9px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--card);
+  }
+  .toolbar input[type=search] { flex: 1; min-width: 200px; }
+  .toolbar select { min-width: 130px; }
+  .toolbar input[type=search]:focus, .toolbar select:focus {
+    outline: none;
+    border-color: var(--hfk-red);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .card-item {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.12s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card-item:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+  }
+  .wine-card .img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: var(--soft);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 32px;
+  }
+  .wine-card .img img { width: 100%; height: 100%; object-fit: cover; }
+  .card-item .title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text);
+    word-break: keep-all;
+  }
+  .card-item .vintage { color: var(--wine); font-weight: 600; margin-left: 4px; }
+  .card-item .original {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+    font-style: italic;
+  }
+  .card-item .meta {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+  .card-item .meta .dot::before {
+    content: "·";
+    margin-right: 6px;
+    color: var(--line-strong);
+  }
+  .card-item .footer {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .avg-star {
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--hfk-red-soft);
+    color: var(--hfk-red);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .session-tag {
+    display: inline-block;
+    background: var(--soft);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-right: 4px;
+  }
+
+  .empty {
+    background: var(--card);
+    border: 1px dashed var(--line-strong);
+    border-radius: 12px;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty strong {
+    display: block;
+    color: var(--text);
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 640px;
+    padding: 28px;
+    position: relative;
+  }
+  .modal h2 {
+    margin: 0 0 4px;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--hfk-red);
+  }
+  .modal .modal-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .modal .close {
+    position: absolute;
+    top: 14px; right: 14px;
+    background: transparent;
+    border: 0;
+    font-size: 22px;
+    color: var(--muted);
+    cursor: pointer;
+    width: 32px; height: 32px;
+    border-radius: 6px;
+  }
+  .modal .close:hover { background: var(--soft); }
+
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .field label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .field .hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .field input, .field textarea, .field select {
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--hfk-red);
+  }
+  .field textarea { min-height: 70px; resize: vertical; line-height: 1.5; }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal .actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 18px;
+    align-items: center;
+  }
+  .modal .actions .left { display: flex; gap: 8px; }
+  .modal .actions .right { display: flex; gap: 8px; }
+  .error-msg {
+    background: #fde8e8;
+    color: #7a0000;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  .detail-info {
+    background: var(--soft);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .detail-info .row { display: flex; gap: 8px; padding: 2px 0; }
+  .detail-info .row .k { width: 84px; color: var(--muted); font-weight: 500; flex-shrink: 0; }
+  .detail-info .row .v { flex: 1; word-break: keep-all; }
+
+  .section-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 18px 0 10px;
+  }
+  .section-bar h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .section-bar .meta { font-size: 12px; color: var(--muted); }
+
+  .note-item {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .note-item .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .note-item .head .left { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .note-item .author { font-weight: 600; font-size: 14px; }
+  .note-item .date { font-size: 12px; color: var(--muted); }
+  .note-item .score { color: var(--gold); font-weight: 600; font-size: 13px; }
+  .note-item .actions-mini { display: flex; gap: 6px; }
+  .note-item .actions-mini button {
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .note-item .actions-mini button:hover { background: var(--soft); color: var(--hfk-red); }
+  .note-item .body {
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: keep-all;
+  }
+  .note-item .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .note-item .sub strong {
+    color: var(--text);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  .note-form {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    background: var(--soft);
+    margin-top: 12px;
+  }
+  .note-form .form-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .mini-wine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .mini-wine {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .mini-wine:hover { border-color: var(--hfk-red); }
+  .mini-wine .name { font-weight: 600; font-size: 14px; }
+  .mini-wine .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 16px 12px 60px; }
+    header.top { padding: 18px 20px; }
+    header.top h1 { font-size: 19px; }
+    .modal { padding: 22px 18px; }
+    .field-grid { grid-template-columns: 1fr; }
+    .toolbar select { min-width: 0; flex: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>🍷 HFK 와인 소사이어티</h1>
+      <div class="sub">매달 함께 시음한 와인의 기록을 쌓아갑니다</div>
+    </div>
+    <div class="top-actions">
+      <button class="ghost" id="refresh-btn">새로고침</button>
+      <button class="ghost" id="add-session-btn" style="display:none;">+ 세션 등록</button>
+      <button class="primary" id="add-wine-btn" style="display:none;">+ 와인 등록</button>
+      <a href="#" class="admin-link" id="admin-link">관리자</a>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">누적 시음 와인</div>
+      <div class="stat-value" id="stat-wines">–</div>
+      <div class="stat-sub">병</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">누적 시음 노트</div>
+      <div class="stat-value" id="stat-notes">–</div>
+      <div class="stat-sub">개</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">세션 수</div>
+      <div class="stat-value" id="stat-sessions">–</div>
+      <div class="stat-sub">회</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">최근 시음일</div>
+      <div class="stat-value" id="stat-latest" style="font-size:18px;">–</div>
+      <div class="stat-sub" id="stat-latest-wine">–</div>
+    </div>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" data-view="wines">전체 와인</button>
+    <button class="view-tab" data-view="sessions">세션별</button>
+  </div>
+
+  <div class="toolbar" id="wines-toolbar">
+    <input type="search" id="search-input" placeholder="와인명 · 생산자 · 품종 · 지역 검색">
+    <select id="filter-country"><option value="">국가 전체</option></select>
+    <select id="filter-variety"><option value="">품종 전체</option></select>
+    <select id="filter-vintage"><option value="">빈티지 전체</option></select>
+    <select id="sort-by">
+      <option value="date_desc">최근 시음 순</option>
+      <option value="date_asc">오래된 시음 순</option>
+      <option value="score_desc">평균 점수 높은 순</option>
+      <option value="note_count_desc">노트 많은 순</option>
+    </select>
+  </div>
+
+  <div id="content-area">
+    <div class="empty"><strong>불러오는 중…</strong></div>
+  </div>
+
+</div>
+
+<!-- 관리자 로그인 -->
+<div class="modal-backdrop" id="admin-login-modal">
+  <div class="modal" style="max-width: 420px;">
+    <button class="close" data-close>×</button>
+    <h2>관리자 로그인</h2>
+    <div class="modal-sub">와인·세션 등록 권한이 필요합니다.</div>
+    <div class="error-msg" id="admin-error"></div>
+    <form id="admin-form">
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" name="admin_password" id="admin-pw-input" required autocomplete="current-password">
+      </div>
+      <div class="actions">
+        <div class="left"></div>
+        <div class="right">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="primary" id="admin-submit">로그인</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 세션 등록/수정 -->
+<div class="modal-backdrop" id="session-form-modal">
+  <div class="modal">
+    <button class="close" data-close>×</button>
+    <h2 id="session-form-title">세션 등록</h2>
+    <div class="modal-sub">한 모임에서 함께 시음한 와인들을 묶기 위한 세션을 만듭니다.</div>
+    <div class="error-msg" id="session-form-error"></div>
+    <form id="session-form">
+      <input type="hidden" name="session_id">
+      <div class="field-grid">
+        <div class="field">
+          <label>세션 이름 *</label>
+          <input type="text" name="name" required placeholder="26년 5월 와인회">
+        </div>
+        <div class="field">
+          <label>일자 *</label>
+          <input type="date" name="session_date" required>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>장소</label>
+          <input type="text" name="location" placeholder="HFK 라운지">
+        </div>
+        <div class="field">
+          <label>호스트</label>
+          <input type="text" name="host">
+        </div>
+      </div>
+      <div class="field">
+        <label>주제 <span class="hint">선택</span></label>
+        <input type="text" name="theme" placeholder="부르고뉴 피노누아 비교 시음">
+      </div>
+      <div class="field">
+        <label>설명 <span class="hint">선택</span></label>
+        <textarea name="description" placeholder="세션 컨셉 · 참고 메모"></textarea>
+      </div>
+      <div class="actions">
+        <div class="left"></div>
+        <div class="right">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="primary" id="session-form-submit">등록</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 와인 등록/수정 -->
+<div class="modal-backdrop" id="wine-form-modal">
+  <div class="modal">
+    <button class="close" data-close>×</button>
+    <h2 id="wine-form-title">와인 등록</h2>
+    <div class="modal-sub">시음할 와인 정보를 등록합니다. 멤버들은 이 카드에 노트를 남깁니다.</div>
+    <div class="error-msg" id="wine-form-error"></div>
+    <form id="wine-form">
+      <input type="hidden" name="wine_id">
+
+      <div class="field">
+        <label>세션 <span class="hint">선택, 모임 단위로 묶고 싶을 때</span></label>
+        <select name="session_id" id="wine-session-select">
+          <option value="">— 세션 없음 —</option>
+        </select>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>와인명 (한글)</label>
+          <input type="text" name="name_ko" placeholder="샤토 마고">
+        </div>
+        <div class="field">
+          <label>빈티지</label>
+          <input type="text" name="vintage" placeholder="2018">
+        </div>
+      </div>
+      <div class="field">
+        <label>와인명 (원문) <span class="hint">라벨에 적힌 그대로</span></label>
+        <input type="text" name="name_original" placeholder="Château Margaux">
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>국가</label>
+          <input type="text" name="country" placeholder="프랑스">
+        </div>
+        <div class="field">
+          <label>지역</label>
+          <input type="text" name="region" placeholder="보르도, 마고">
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>품종</label>
+          <input type="text" name="variety" placeholder="카베르네 소비뇽">
+        </div>
+        <div class="field">
+          <label>생산자</label>
+          <input type="text" name="producer">
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>시음일 *</label>
+          <input type="date" name="tasted_at" required>
+        </div>
+        <div class="field">
+          <label>시음 장소</label>
+          <input type="text" name="tasted_place" placeholder="HFK 라운지">
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>가격대 <span class="hint">선택</span></label>
+          <input type="text" name="price_range" placeholder="10–15만원">
+        </div>
+        <div class="field">
+          <label>등록자</label>
+          <input type="text" name="added_by" id="wine-added-by">
+        </div>
+      </div>
+      <div class="field">
+        <label>와인 이미지 URL <span class="hint">선택, 라벨 사진 링크</span></label>
+        <input type="url" name="image_url" placeholder="https://...">
+      </div>
+
+      <div class="actions">
+        <div class="left"></div>
+        <div class="right">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="primary" id="wine-form-submit">등록</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 와인 상세 + 노트 -->
+<div class="modal-backdrop" id="wine-detail-modal">
+  <div class="modal" style="max-width: 720px;">
+    <button class="close" data-close>×</button>
+    <h2 id="detail-title">–</h2>
+    <div class="modal-sub" id="detail-sub"></div>
+    <div class="detail-info" id="detail-info"></div>
+
+    <div class="section-bar">
+      <h3>시음 노트 <span id="detail-notes-count" style="color:var(--muted); font-weight:500;"></span></h3>
+      <div class="meta" id="detail-avg"></div>
+    </div>
+    <div id="detail-notes-list"></div>
+
+    <div class="note-form">
+      <div class="form-title" id="note-form-title">+ 내 시음 노트 남기기</div>
+      <div class="error-msg" id="note-error"></div>
+      <form id="note-form">
+        <input type="hidden" name="wine_id">
+        <input type="hidden" name="note_id">
+
+        <div class="field-grid">
+          <div class="field">
+            <label>이름 *</label>
+            <input type="text" name="author" id="note-author" required>
+          </div>
+          <div class="field">
+            <label>점수 <span class="hint">1–5, 선택</span></label>
+            <select name="score">
+              <option value="">–</option>
+              <option value="5">★★★★★ 5</option>
+              <option value="4">★★★★ 4</option>
+              <option value="3">★★★ 3</option>
+              <option value="2">★★ 2</option>
+              <option value="1">★ 1</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>향 <span class="hint">아로마</span></label>
+          <textarea name="aroma" placeholder="블랙커런트, 삼나무, 가죽…"></textarea>
+        </div>
+        <div class="field">
+          <label>맛 <span class="hint">팔레트, 산미, 탄닌, 바디</span></label>
+          <textarea name="palate" placeholder="중간 산미와 단단한 탄닌…"></textarea>
+        </div>
+        <div class="field">
+          <label>종합 코멘트 *</label>
+          <textarea name="comment" placeholder="전반적인 인상, 기억에 남는 점" required></textarea>
+        </div>
+        <div class="field">
+          <label>추천 페어링 <span class="hint">선택</span></label>
+          <input type="text" name="pairing" placeholder="등심 스테이크, 하드 치즈">
+        </div>
+
+        <div class="actions">
+          <div class="left">
+            <button type="button" class="ghost" id="note-cancel-edit" style="display:none;">편집 취소</button>
+          </div>
+          <div class="right">
+            <button type="submit" class="primary" id="note-submit">노트 남기기</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 세션 상세 -->
+<div class="modal-backdrop" id="session-detail-modal">
+  <div class="modal" style="max-width: 720px;">
+    <button class="close" data-close>×</button>
+    <h2 id="session-detail-title">–</h2>
+    <div class="modal-sub" id="session-detail-sub"></div>
+    <div class="detail-info" id="session-detail-info"></div>
+
+    <div class="section-bar">
+      <h3>이 세션에서 시음한 와인 <span id="session-wines-count" style="color:var(--muted); font-weight:500;"></span></h3>
+    </div>
+    <div id="session-wines-list"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ==== 설정 ====
+  const API_URL = "https://script.google.com/macros/s/AKfycbzU9t_Ggz1UOjM-cfWV2zSeo56nAg2s7WwdRl7E4qjEqSHMIxFKDevG7Ss2T8ZU3en-/exec";
+  const SHARED_SECRET = "hfk1004";
+
+  // ==== 상태 ====
+  let sessions = [], wines = [], notes = [];
+  let filterText = "";
+  let filters = { country: "", variety: "", vintage: "" };
+  let sortBy = "date_desc";
+  let viewMode = "wines";
+
+  // ==== 유틸 ====
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => document.querySelectorAll(sel);
+  const escapeHtml = s => String(s || "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmtDate = s => {
+    if (!s) return "";
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return s;
+    const d = new Date(s);
+    const days = ["일","월","화","수","목","금","토"];
+    return `${parseInt(m[2])}월 ${parseInt(m[3])}일 (${days[d.getDay()]})`;
+  };
+  const fmtDateShort = s => {
+    if (!s) return "";
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${m[1]}.${m[2]}.${m[3]}` : s;
+  };
+  const showToast = msg => {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2400);
+  };
+  const showError = (id, msg) => {
+    const el = document.getElementById(id);
+    if (!msg) { el.classList.remove("show"); el.textContent = ""; return; }
+    el.textContent = msg;
+    el.classList.add("show");
+  };
+
+  // ==== localStorage ====
+  const LS_NAME = "hfk-wine-name";
+  const LS_ADMIN = "hfk-wine-admin-pw";
+  const LS_TOKENS = "hfk-wine-note-tokens";
+  const savedName = () => localStorage.getItem(LS_NAME) || "";
+  const saveName = n => { if (n) localStorage.setItem(LS_NAME, n); };
+  const savedAdmin = () => localStorage.getItem(LS_ADMIN) || "";
+  const saveAdmin = pw => { if (pw) localStorage.setItem(LS_ADMIN, pw); };
+  const clearAdmin = () => localStorage.removeItem(LS_ADMIN);
+  const isAdmin = () => !!savedAdmin();
+  const getTokens = () => {
+    try { return JSON.parse(localStorage.getItem(LS_TOKENS) || "{}"); }
+    catch { return {}; }
+  };
+  const setToken = (noteId, token) => {
+    const t = getTokens();
+    t[noteId] = token;
+    localStorage.setItem(LS_TOKENS, JSON.stringify(t));
+  };
+  const removeToken = noteId => {
+    const t = getTokens();
+    delete t[noteId];
+    localStorage.setItem(LS_TOKENS, JSON.stringify(t));
+  };
+  const myToken = noteId => getTokens()[noteId] || null;
+  const canEditNote = noteId => isAdmin() || !!myToken(noteId);
+
+  // ==== API ====
+  async function loadAll() {
+    try {
+      const res = await fetch(API_URL + "?t=" + Date.now());
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "응답 오류");
+      sessions = data.sessions || [];
+      wines = data.wines || [];
+      notes = data.notes || [];
+      refreshFilterOptions();
+      render();
+    } catch (err) {
+      console.error(err);
+      $("#content-area").innerHTML = `<div class="empty"><strong>불러오기 실패</strong>${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  async function postAction(action, payload) {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ auth: SHARED_SECRET, action, ...payload })
+    });
+    return res.json();
+  }
+
+  // ==== 집계 ====
+  function notesForWine(wineId) {
+    return notes.filter(n => n.wine_id === wineId);
+  }
+  function avgScore(wineId) {
+    const ns = notesForWine(wineId).filter(n => n.score && !isNaN(parseFloat(n.score)));
+    if (ns.length === 0) return null;
+    return ns.reduce((a, n) => a + parseFloat(n.score), 0) / ns.length;
+  }
+  function winesInSession(sessionId) {
+    return wines.filter(w => w.session_id === sessionId);
+  }
+  function sessionById(id) {
+    return sessions.find(s => s.session_id === id) || null;
+  }
+
+  // ==== 통계 ====
+  function renderStats() {
+    $("#stat-wines").textContent = wines.length;
+    $("#stat-notes").textContent = notes.length;
+    $("#stat-sessions").textContent = sessions.length;
+    if (wines.length > 0) {
+      const latest = wines[0];
+      $("#stat-latest").textContent = fmtDate(latest.tasted_at);
+      $("#stat-latest-wine").textContent = latest.name_ko || latest.name_original || "";
+    } else {
+      $("#stat-latest").textContent = "–";
+      $("#stat-latest-wine").textContent = "아직 기록 없음";
+    }
+  }
+
+  // ==== 필터 옵션 갱신 ====
+  function refreshFilterOptions() {
+    const fill = (sel, vals, label) => {
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">${label} 전체</option>` +
+        [...new Set(vals.filter(Boolean))].sort().map(v =>
+          `<option value="${escapeHtml(v)}"${v === cur ? " selected" : ""}>${escapeHtml(v)}</option>`
+        ).join("");
+    };
+    fill($("#filter-country"), wines.map(w => w.country), "국가");
+    fill($("#filter-variety"), wines.map(w => w.variety), "품종");
+    fill($("#filter-vintage"), wines.map(w => w.vintage), "빈티지");
+  }
+
+  // ==== 메인 렌더 ====
+  function render() {
+    renderStats();
+    renderAdminUI();
+    if (viewMode === "wines") {
+      $("#wines-toolbar").style.display = "";
+      renderWineGrid();
+    } else {
+      $("#wines-toolbar").style.display = "none";
+      renderSessionGrid();
+    }
+  }
+
+  function renderWineGrid() {
+    const area = $("#content-area");
+    const q = filterText.trim().toLowerCase();
+    let arr = wines.filter(w => {
+      if (filters.country && w.country !== filters.country) return false;
+      if (filters.variety && w.variety !== filters.variety) return false;
+      if (filters.vintage && w.vintage !== filters.vintage) return false;
+      if (q) {
+        const hay = [w.name_ko, w.name_original, w.producer, w.variety, w.region, w.country]
+          .join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    // 정렬
+    if (sortBy === "date_desc") arr.sort((a,b) => (b.tasted_at||"").localeCompare(a.tasted_at||""));
+    else if (sortBy === "date_asc") arr.sort((a,b) => (a.tasted_at||"").localeCompare(b.tasted_at||""));
+    else if (sortBy === "score_desc") arr.sort((a,b) => (avgScore(b.wine_id)||0) - (avgScore(a.wine_id)||0));
+    else if (sortBy === "note_count_desc") arr.sort((a,b) => notesForWine(b.wine_id).length - notesForWine(a.wine_id).length);
+
+    if (arr.length === 0) {
+      area.innerHTML = wines.length === 0
+        ? `<div class="empty"><strong>아직 등록된 와인이 없습니다</strong>${isAdmin() ? "위쪽 ‘+ 와인 등록’ 버튼을 눌러 첫 번째 와인을 기록해 보세요." : "관리자가 시음할 와인을 등록하면 여기에 표시됩니다."}</div>`
+        : `<div class="empty"><strong>검색 결과가 없습니다</strong>다른 키워드/필터로 다시 시도해 주세요.</div>`;
+      return;
+    }
+
+    area.innerHTML = `<div class="grid">` + arr.map(w => {
+      const nc = notesForWine(w.wine_id).length;
+      const avg = avgScore(w.wine_id);
+      const meta = [w.country, w.region, w.variety].filter(Boolean);
+      const metaHtml = meta.map((m, i) =>
+        `<span${i === 0 ? "" : ' class="dot"'}>${escapeHtml(m)}</span>`
+      ).join("");
+      const sess = w.session_id ? sessionById(w.session_id) : null;
+      const sessTag = sess ? `<span class="session-tag">${escapeHtml(sess.name)}</span>` : "";
+      const img = w.image_url
+        ? `<img src="${escapeHtml(w.image_url)}" alt="" onerror="this.parentElement.innerHTML='🍷'">`
+        : "🍷";
+      return `
+        <div class="card-item wine-card" data-wine-id="${escapeHtml(w.wine_id)}">
+          <div class="img">${img}</div>
+          ${sessTag ? `<div>${sessTag}</div>` : ""}
+          <div class="title">${escapeHtml(w.name_ko || w.name_original || "이름 미상")}${w.vintage ? `<span class="vintage">${escapeHtml(w.vintage)}</span>` : ""}</div>
+          ${w.name_ko && w.name_original ? `<div class="original">${escapeHtml(w.name_original)}</div>` : ""}
+          ${meta.length ? `<div class="meta">${metaHtml}</div>` : ""}
+          <div class="footer">
+            <span>${fmtDateShort(w.tasted_at)} 시음</span>
+            <span>
+              ${avg !== null ? `<span class="avg-star">★ ${avg.toFixed(1)}</span> · ` : ""}
+              ${nc > 0 ? `<span class="badge">노트 ${nc}</span>` : `<span style="color:var(--muted);">노트 0</span>`}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join("") + `</div>`;
+
+    $$(".wine-card").forEach(card => {
+      card.addEventListener("click", () => openWineDetail(card.dataset.wineId));
+    });
+  }
+
+  function renderSessionGrid() {
+    const area = $("#content-area");
+    if (sessions.length === 0) {
+      area.innerHTML = `<div class="empty"><strong>아직 등록된 세션이 없습니다</strong>${isAdmin() ? "‘+ 세션 등록’ 으로 한 모임의 와인들을 묶어 볼 수 있습니다." : "관리자가 세션을 등록하면 여기에 표시됩니다."}</div>`;
+      return;
+    }
+    area.innerHTML = `<div class="grid">` + sessions.map(s => {
+      const wineList = winesInSession(s.session_id);
+      const noteList = wineList.reduce((sum, w) => sum + notesForWine(w.wine_id).length, 0);
+      return `
+        <div class="card-item" data-session-id="${escapeHtml(s.session_id)}">
+          <div class="title">${escapeHtml(s.name)}</div>
+          <div class="meta">
+            <span>${fmtDate(s.session_date)}</span>
+            ${s.location ? `<span class="dot">${escapeHtml(s.location)}</span>` : ""}
+          </div>
+          ${s.theme ? `<div class="original">${escapeHtml(s.theme)}</div>` : ""}
+          <div class="footer">
+            <span>와인 ${wineList.length}병</span>
+            <span>노트 ${noteList}개</span>
+          </div>
+        </div>
+      `;
+    }).join("") + `</div>`;
+    $$("[data-session-id]").forEach(card => {
+      card.addEventListener("click", () => openSessionDetail(card.dataset.sessionId));
+    });
+  }
+
+  // ==== 관리자 UI ====
+  function renderAdminUI() {
+    const link = $("#admin-link");
+    if (isAdmin()) {
+      $("#add-wine-btn").style.display = "";
+      $("#add-session-btn").style.display = "";
+      link.textContent = "관리자 로그아웃";
+      link.classList.add("active");
+    } else {
+      $("#add-wine-btn").style.display = "none";
+      $("#add-session-btn").style.display = "none";
+      link.textContent = "관리자";
+      link.classList.remove("active");
+    }
+  }
+
+  $("#admin-link").addEventListener("click", e => {
+    e.preventDefault();
+    if (isAdmin()) {
+      if (confirm("관리자 로그아웃 하시겠어요?")) {
+        clearAdmin();
+        renderAdminUI();
+        render();
+        showToast("로그아웃 되었습니다");
+      }
+    } else {
+      showError("admin-error", "");
+      $("#admin-form").reset();
+      openModal("admin-login-modal");
+      setTimeout(() => $("#admin-pw-input").focus(), 50);
+    }
+  });
+
+  $("#admin-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    showError("admin-error", "");
+    const pw = $("#admin-pw-input").value;
+    const btn = $("#admin-submit");
+    btn.disabled = true; btn.textContent = "확인 중…";
+    try {
+      const res = await postAction("verifyAdmin", { admin_password: pw });
+      if (!res.ok) throw new Error(res.error || "로그인 실패");
+      saveAdmin(pw);
+      renderAdminUI();
+      render();
+      closeAllModals();
+      showToast("관리자 로그인 완료");
+    } catch (err) {
+      showError("admin-error", err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "로그인";
+    }
+  });
+
+  // ==== 세션 등록/수정 ====
+  function fillSessionDropdown() {
+    const sel = $("#wine-session-select");
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">— 세션 없음 —</option>` +
+      sessions.map(s =>
+        `<option value="${escapeHtml(s.session_id)}"${s.session_id === cur ? " selected" : ""}>${escapeHtml(s.name)} (${fmtDateShort(s.session_date)})</option>`
+      ).join("");
+  }
+
+  function openSessionForm(session) {
+    showError("session-form-error", "");
+    const form = $("#session-form");
+    form.reset();
+    if (session) {
+      $("#session-form-title").textContent = "세션 수정";
+      $("#session-form-submit").textContent = "저장";
+      form.elements["session_id"].value = session.session_id;
+      form.elements["name"].value = session.name || "";
+      form.elements["session_date"].value = session.session_date || "";
+      form.elements["location"].value = session.location || "";
+      form.elements["theme"].value = session.theme || "";
+      form.elements["host"].value = session.host || "";
+      form.elements["description"].value = session.description || "";
+    } else {
+      $("#session-form-title").textContent = "세션 등록";
+      $("#session-form-submit").textContent = "등록";
+      form.elements["session_date"].value = new Date().toISOString().slice(0, 10);
+    }
+    openModal("session-form-modal");
+  }
+
+  $("#add-session-btn").addEventListener("click", () => openSessionForm(null));
+
+  $("#session-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    showError("session-form-error", "");
+    const fd = new FormData(e.target);
+    const payload = Object.fromEntries(fd.entries());
+    payload.admin_password = savedAdmin();
+    const editing = !!payload.session_id;
+    const action = editing ? "updateSession" : "addSession";
+    const btn = $("#session-form-submit");
+    btn.disabled = true; btn.textContent = editing ? "저장 중…" : "등록 중…";
+    try {
+      const res = await postAction(action, payload);
+      if (!res.ok) {
+        if (res.error && res.error.includes("관리자 비밀번호")) { clearAdmin(); renderAdminUI(); }
+        throw new Error(res.error || "처리 실패");
+      }
+      showToast(editing ? "세션이 수정되었습니다" : "세션이 등록되었습니다");
+      closeAllModals();
+      await loadAll();
+    } catch (err) {
+      showError("session-form-error", err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = editing ? "저장" : "등록";
+    }
+  });
+
+  // ==== 와인 등록/수정 ====
+  function openWineForm(wine) {
+    showError("wine-form-error", "");
+    const form = $("#wine-form");
+    form.reset();
+    fillSessionDropdown();
+    if (wine) {
+      $("#wine-form-title").textContent = "와인 수정";
+      $("#wine-form-submit").textContent = "저장";
+      form.elements["wine_id"].value = wine.wine_id;
+      ["session_id","name_ko","name_original","vintage","country","region","variety",
+       "producer","price_range","tasted_at","tasted_place","image_url","added_by"]
+        .forEach(k => { if (form.elements[k]) form.elements[k].value = wine[k] || ""; });
+    } else {
+      $("#wine-form-title").textContent = "와인 등록";
+      $("#wine-form-submit").textContent = "등록";
+      $("#wine-added-by").value = savedName();
+      form.elements["tasted_at"].value = new Date().toISOString().slice(0, 10);
+    }
+    openModal("wine-form-modal");
+  }
+
+  $("#add-wine-btn").addEventListener("click", () => openWineForm(null));
+
+  $("#wine-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    showError("wine-form-error", "");
+    const fd = new FormData(e.target);
+    const payload = Object.fromEntries(fd.entries());
+    payload.admin_password = savedAdmin();
+    const editing = !!payload.wine_id;
+    const action = editing ? "updateWine" : "addWine";
+    const btn = $("#wine-form-submit");
+    btn.disabled = true; btn.textContent = editing ? "저장 중…" : "등록 중…";
+    try {
+      const res = await postAction(action, payload);
+      if (!res.ok) {
+        if (res.error && res.error.includes("관리자 비밀번호")) { clearAdmin(); renderAdminUI(); }
+        throw new Error(res.error || "처리 실패");
+      }
+      saveName(payload.added_by);
+      showToast(editing ? "와인이 수정되었습니다" : "와인이 등록되었습니다");
+      const wineId = payload.wine_id || (res.wine && res.wine.wine_id);
+      closeAllModals();
+      await loadAll();
+      if (wineId) openWineDetail(wineId);
+    } catch (err) {
+      showError("wine-form-error", err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = editing ? "저장" : "등록";
+    }
+  });
+
+  // ==== 와인 상세 + 노트 작성 ====
+  let currentWineId = null;
+  let editingNoteId = null;
+
+  function openWineDetail(wineId) {
+    const w = wines.find(x => x.wine_id === wineId);
+    if (!w) return;
+    currentWineId = wineId;
+
+    $("#detail-title").textContent = (w.name_ko || w.name_original || "이름 미상") + (w.vintage ? ` ${w.vintage}` : "");
+
+    // 관리자면 수정/삭제 버튼 부착
+    const adminActions = isAdmin()
+      ? ` <button class="ghost small" id="detail-edit-wine">수정</button> <button class="danger small" id="detail-delete-wine">삭제</button>`
+      : "";
+    $("#detail-sub").innerHTML = `<div style="display:flex; justify-content:flex-end; gap:6px; margin-top:-8px;">${adminActions}</div>`;
+
+    const sess = w.session_id ? sessionById(w.session_id) : null;
+    const rows = [
+      ["세션", sess ? sess.name + " (" + fmtDateShort(sess.session_date) + ")" : ""],
+      ["원문명", w.name_original],
+      ["생산자", w.producer],
+      ["국가 · 지역", [w.country, w.region].filter(Boolean).join(" · ")],
+      ["품종", w.variety],
+      ["가격대", w.price_range],
+      ["시음일", fmtDate(w.tasted_at)],
+      ["시음 장소", w.tasted_place],
+      ["등록자", w.added_by]
+    ].filter(([_, v]) => v);
+    $("#detail-info").innerHTML = rows.map(([k, v]) =>
+      `<div class="row"><span class="k">${k}</span><span class="v">${escapeHtml(v)}</span></div>`
+    ).join("");
+
+    const wineNotes = notesForWine(wineId);
+    $("#detail-notes-count").textContent = `(${wineNotes.length})`;
+    const avg = avgScore(wineId);
+    $("#detail-avg").textContent = avg !== null ? `평균 ★ ${avg.toFixed(2)} / 5` : "";
+
+    if (wineNotes.length === 0) {
+      $("#detail-notes-list").innerHTML = `<div style="color:var(--muted); font-size:13px; padding:8px 2px;">아직 노트가 없습니다. 첫 번째 노트를 남겨 보세요.</div>`;
+    } else {
+      $("#detail-notes-list").innerHTML = wineNotes.map(n => {
+        const score = n.score ? ` <span class="score">★ ${escapeHtml(n.score)}</span>` : "";
+        const sub = [];
+        if (n.aroma) sub.push(`<div class="sub"><strong>향</strong>${escapeHtml(n.aroma)}</div>`);
+        if (n.palate) sub.push(`<div class="sub"><strong>맛</strong>${escapeHtml(n.palate)}</div>`);
+        if (n.pairing) sub.push(`<div class="sub"><strong>페어링</strong>${escapeHtml(n.pairing)}</div>`);
+        const canEdit = canEditNote(n.note_id);
+        const updated = n.updated_at && n.updated_at !== n.created_at ? ` <span style="color:var(--muted);">(수정됨)</span>` : "";
+        const mini = canEdit
+          ? `<div class="actions-mini"><button data-edit-note="${escapeHtml(n.note_id)}">수정</button><button data-delete-note="${escapeHtml(n.note_id)}">삭제</button></div>`
+          : "";
+        return `
+          <div class="note-item">
+            <div class="head">
+              <div class="left"><span class="author">${escapeHtml(n.author)}</span>${score}<span class="date">${fmtDateShort((n.created_at || "").slice(0, 10))}${updated}</span></div>
+              ${mini}
+            </div>
+            ${n.comment ? `<div class="body">${escapeHtml(n.comment)}</div>` : ""}
+            ${sub.join("")}
+          </div>
+        `;
+      }).join("");
+    }
+
+    resetNoteForm();
+    $("#note-form").elements["wine_id"].value = wineId;
+    $("#note-author").value = savedName();
+    showError("note-error", "");
+
+    openModal("wine-detail-modal");
+
+    // 이벤트 핸들러 부착
+    if (isAdmin()) {
+      $("#detail-edit-wine") && $("#detail-edit-wine").addEventListener("click", () => { closeAllModals(); openWineForm(w); });
+      $("#detail-delete-wine") && $("#detail-delete-wine").addEventListener("click", () => deleteWine(wineId));
+    }
+    $$("[data-edit-note]").forEach(b => b.addEventListener("click", () => startEditNote(b.dataset.editNote)));
+    $$("[data-delete-note]").forEach(b => b.addEventListener("click", () => deleteNote(b.dataset.deleteNote)));
+  }
+
+  async function deleteWine(wineId) {
+    const w = wines.find(x => x.wine_id === wineId);
+    if (!w) return;
+    if (!confirm(`'${w.name_ko || w.name_original}' 와인을 삭제할까요?\n해당 와인의 모든 시음 노트도 함께 삭제됩니다.`)) return;
+    try {
+      const res = await postAction("deleteWine", { wine_id: wineId, admin_password: savedAdmin() });
+      if (!res.ok) throw new Error(res.error || "삭제 실패");
+      showToast("와인이 삭제되었습니다");
+      closeAllModals();
+      await loadAll();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  function resetNoteForm() {
+    const form = $("#note-form");
+    form.reset();
+    form.elements["note_id"].value = "";
+    editingNoteId = null;
+    $("#note-form-title").textContent = "+ 내 시음 노트 남기기";
+    $("#note-submit").textContent = "노트 남기기";
+    $("#note-cancel-edit").style.display = "none";
+  }
+
+  function startEditNote(noteId) {
+    const n = notes.find(x => x.note_id === noteId);
+    if (!n) return;
+    if (!canEditNote(noteId)) { alert("본인이 작성한 노트만 수정할 수 있습니다"); return; }
+    editingNoteId = noteId;
+    const form = $("#note-form");
+    form.elements["note_id"].value = noteId;
+    form.elements["wine_id"].value = n.wine_id;
+    form.elements["author"].value = n.author || "";
+    form.elements["score"].value = n.score || "";
+    form.elements["aroma"].value = n.aroma || "";
+    form.elements["palate"].value = n.palate || "";
+    form.elements["comment"].value = n.comment || "";
+    form.elements["pairing"].value = n.pairing || "";
+    $("#note-form-title").textContent = "노트 수정";
+    $("#note-submit").textContent = "수정 저장";
+    $("#note-cancel-edit").style.display = "";
+    // 노트 폼으로 스크롤
+    setTimeout(() => { $("#note-form-title").scrollIntoView({ behavior: "smooth", block: "center" }); }, 50);
+  }
+
+  $("#note-cancel-edit").addEventListener("click", resetNoteForm);
+
+  async function deleteNote(noteId) {
+    if (!canEditNote(noteId)) { alert("본인이 작성한 노트만 삭제할 수 있습니다"); return; }
+    if (!confirm("이 노트를 삭제할까요?")) return;
+    const payload = { note_id: noteId };
+    if (isAdmin()) payload.admin_password = savedAdmin();
+    else payload.author_token = myToken(noteId);
+    try {
+      const res = await postAction("deleteNote", payload);
+      if (!res.ok) throw new Error(res.error || "삭제 실패");
+      removeToken(noteId);
+      showToast("노트가 삭제되었습니다");
+      await loadAll();
+      if (currentWineId) openWineDetail(currentWineId);
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  $("#note-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    showError("note-error", "");
+    const fd = new FormData(e.target);
+    const payload = Object.fromEntries(fd.entries());
+    const btn = $("#note-submit");
+    btn.disabled = true;
+    const editing = !!editingNoteId;
+    btn.textContent = editing ? "저장 중…" : "저장 중…";
+    try {
+      let res;
+      if (editing) {
+        const auth = { note_id: editingNoteId };
+        if (isAdmin()) auth.admin_password = savedAdmin();
+        else auth.author_token = myToken(editingNoteId);
+        res = await postAction("updateNote", { ...payload, ...auth });
+      } else {
+        delete payload.note_id;
+        res = await postAction("addNote", payload);
+      }
+      if (!res.ok) throw new Error(res.error || "저장 실패");
+      saveName(payload.author);
+      if (!editing && res.author_token && res.note && res.note.note_id) {
+        setToken(res.note.note_id, res.author_token);
+      }
+      showToast(editing ? "노트가 수정되었습니다" : "시음 노트가 저장되었습니다");
+      const wineId = payload.wine_id;
+      await loadAll();
+      openWineDetail(wineId);
+    } catch (err) {
+      showError("note-error", err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = editing ? "수정 저장" : "노트 남기기";
+    }
+  });
+
+  // ==== 세션 상세 ====
+  function openSessionDetail(sessionId) {
+    const s = sessionById(sessionId);
+    if (!s) return;
+
+    $("#session-detail-title").textContent = s.name;
+    const adminActions = isAdmin()
+      ? ` <button class="ghost small" id="session-edit-btn">수정</button> <button class="danger small" id="session-delete-btn">삭제</button>`
+      : "";
+    $("#session-detail-sub").innerHTML = `<div style="display:flex; justify-content:flex-end; gap:6px; margin-top:-8px;">${adminActions}</div>`;
+
+    const rows = [
+      ["일자", fmtDate(s.session_date)],
+      ["장소", s.location],
+      ["호스트", s.host],
+      ["주제", s.theme],
+      ["설명", s.description]
+    ].filter(([_, v]) => v);
+    $("#session-detail-info").innerHTML = rows.map(([k, v]) =>
+      `<div class="row"><span class="k">${k}</span><span class="v">${escapeHtml(v)}</span></div>`
+    ).join("");
+
+    const wineList = winesInSession(sessionId);
+    $("#session-wines-count").textContent = `(${wineList.length})`;
+
+    if (wineList.length === 0) {
+      $("#session-wines-list").innerHTML = `<div style="color:var(--muted); font-size:13px; padding:8px 2px;">아직 이 세션에 등록된 와인이 없습니다.</div>`;
+    } else {
+      $("#session-wines-list").innerHTML = `<div class="mini-wine-grid">` + wineList.map(w => {
+        const nc = notesForWine(w.wine_id).length;
+        const avg = avgScore(w.wine_id);
+        return `
+          <div class="mini-wine" data-wine-id="${escapeHtml(w.wine_id)}">
+            <div class="name">${escapeHtml(w.name_ko || w.name_original || "이름 미상")}${w.vintage ? ` <span style="color:var(--wine);">${escapeHtml(w.vintage)}</span>` : ""}</div>
+            <div class="sub">${[w.country, w.variety].filter(Boolean).join(" · ")}</div>
+            <div class="sub">${avg !== null ? `★ ${avg.toFixed(1)} · ` : ""}노트 ${nc}개</div>
+          </div>
+        `;
+      }).join("") + `</div>`;
+      $$("#session-wines-list [data-wine-id]").forEach(el => {
+        el.addEventListener("click", () => {
+          closeAllModals();
+          openWineDetail(el.dataset.wineId);
+        });
+      });
+    }
+
+    openModal("session-detail-modal");
+
+    if (isAdmin()) {
+      $("#session-edit-btn") && $("#session-edit-btn").addEventListener("click", () => { closeAllModals(); openSessionForm(s); });
+      $("#session-delete-btn") && $("#session-delete-btn").addEventListener("click", () => deleteSession(sessionId));
+    }
+  }
+
+  async function deleteSession(sessionId) {
+    const s = sessionById(sessionId);
+    if (!s) return;
+    if (!confirm(`'${s.name}' 세션을 삭제할까요?\n세션에 묶여 있던 와인들은 ‘세션 없음’ 으로 변경됩니다 (와인 자체는 유지).`)) return;
+    try {
+      const res = await postAction("deleteSession", { session_id: sessionId, admin_password: savedAdmin() });
+      if (!res.ok) throw new Error(res.error || "삭제 실패");
+      showToast("세션이 삭제되었습니다");
+      closeAllModals();
+      await loadAll();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // ==== 모달 컨트롤 ====
+  function openModal(id) {
+    document.getElementById(id).classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeAllModals() {
+    $$(".modal-backdrop").forEach(m => m.classList.remove("open"));
+    document.body.style.overflow = "";
+    resetNoteForm();
+  }
+  $$("[data-close]").forEach(el => el.addEventListener("click", closeAllModals));
+  $$(".modal-backdrop").forEach(bd => {
+    bd.addEventListener("click", e => { if (e.target === bd) closeAllModals(); });
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeAllModals();
+  });
+
+  // ==== 뷰 전환 ====
+  $$(".view-tab").forEach(t => t.addEventListener("click", () => {
+    viewMode = t.dataset.view;
+    $$(".view-tab").forEach(x => x.classList.toggle("active", x === t));
+    render();
+  }));
+
+  // ==== 검색·필터·정렬 ====
+  $("#search-input").addEventListener("input", e => { filterText = e.target.value; renderWineGrid(); });
+  $("#filter-country").addEventListener("change", e => { filters.country = e.target.value; renderWineGrid(); });
+  $("#filter-variety").addEventListener("change", e => { filters.variety = e.target.value; renderWineGrid(); });
+  $("#filter-vintage").addEventListener("change", e => { filters.vintage = e.target.value; renderWineGrid(); });
+  $("#sort-by").addEventListener("change", e => { sortBy = e.target.value; renderWineGrid(); });
+
+  // ==== 새로고침 ====
+  $("#refresh-btn").addEventListener("click", () => {
+    $("#refresh-btn").disabled = true;
+    loadAll().finally(() => { $("#refresh-btn").disabled = false; });
+  });
+
+  // ==== 시작 ====
+  renderAdminUI();
+  if (API_URL.includes("REPLACE_WITH")) {
+    $("#content-area").innerHTML = `<div class="empty"><strong>설정이 필요합니다</strong>index.html 상단의 API_URL 변수에 Apps Script 웹앱 URL을 붙여넣어 주세요.</div>`;
+  } else {
+    loadAll();
+  }
+</script>
+</body>
+</html>
