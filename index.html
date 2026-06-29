@@ -504,6 +504,32 @@
     word-break: keep-all;
     margin-top: 6px;
   }
+  .other-device-badge {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--soft);
+    padding: 1px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+    font-weight: 500;
+    vertical-align: middle;
+  }
+  #my-notes-bar {
+    margin-bottom: 14px;
+  }
+  #my-notes-bar input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--card);
+  }
+  #my-notes-bar input:focus {
+    outline: none;
+    border-color: var(--hfk-red);
+  }
 
   .toast {
     position: fixed;
@@ -588,6 +614,10 @@
       <option value="score_desc">평균 점수 높은 순</option>
       <option value="note_count_desc">노트 많은 순</option>
     </select>
+  </div>
+
+  <div id="my-notes-bar" style="display:none;">
+    <input type="text" id="my-name-input" placeholder="내 이름 입력 — 다른 기기에서 같은 이름으로 작성한 노트도 함께 표시">
   </div>
 
   <div id="content-area">
@@ -1052,21 +1082,33 @@
     updateMyTabCount();
     if (viewMode === "wines") {
       $("#wines-toolbar").style.display = "";
+      $("#my-notes-bar").style.display = "none";
       renderWineGrid();
     } else if (viewMode === "sessions") {
       $("#wines-toolbar").style.display = "none";
+      $("#my-notes-bar").style.display = "none";
       renderSessionGrid();
     } else if (viewMode === "my") {
       $("#wines-toolbar").style.display = "none";
+      $("#my-notes-bar").style.display = "";
       renderMyNotesGrid();
     }
+  }
+
+  // 내 노트 식별: 토큰(현재 브라우저에서 작성) OR 이름 일치(어느 기기든)
+  function getMyNotes() {
+    const tokens = getTokens();
+    const myIds = new Set(Object.keys(tokens));
+    const myName = savedName().trim();
+    return notes.filter(n =>
+      myIds.has(n.note_id) || (myName && n.author === myName)
+    );
   }
 
   function updateMyTabCount() {
     const tab = document.querySelector('.view-tab[data-view="my"]');
     if (!tab) return;
-    const tokens = getTokens();
-    const count = Object.keys(tokens).filter(id => notes.some(n => n.note_id === id)).length;
+    const count = getMyNotes().length;
     tab.textContent = count > 0 ? `내 노트 (${count})` : "내 노트";
   }
 
@@ -1074,10 +1116,14 @@
     const area = $("#content-area");
     const tokens = getTokens();
     const myIds = new Set(Object.keys(tokens));
-    const myNotes = notes.filter(n => myIds.has(n.note_id));
+    const myName = savedName().trim();
+    const myNotes = getMyNotes();
 
     if (myNotes.length === 0) {
-      area.innerHTML = `<div class="empty"><strong>아직 작성한 노트가 없습니다</strong>와인 카드를 클릭해 첫 노트를 남겨보세요.<br><br><span style="font-size:12px;">현재 브라우저에서 작성한 노트만 표시됩니다. 다른 기기·브라우저의 노트는 그 곳에서만 확인 가능합니다.</span></div>`;
+      const msg = myName
+        ? `'${escapeHtml(myName)}' 이름으로 작성된 노트가 없습니다. 와인 카드를 클릭해 첫 노트를 남겨보세요.`
+        : `와인 카드를 클릭해 첫 노트를 남겨보세요.<br><br><span style="font-size:12px;">위 입력란에 이름을 적으면 다른 기기에서 같은 이름으로 작성한 노트도 함께 표시됩니다.</span>`;
+      area.innerHTML = `<div class="empty"><strong>아직 작성한 노트가 없습니다</strong>${msg}</div>`;
       return;
     }
 
@@ -1091,9 +1137,11 @@
       if (n.palate) subs.push(`<div class="sub"><strong>맛</strong>${escapeHtml(n.palate)}</div>`);
       if (n.pairing) subs.push(`<div class="sub"><strong>페어링</strong>${escapeHtml(n.pairing)}</div>`);
       const updated = n.updated_at && n.updated_at !== n.created_at ? ` <span style="color:var(--muted);">(수정됨)</span>` : "";
+      const otherDevice = !myIds.has(n.note_id)
+        ? `<span class="other-device-badge">다른 기기</span>` : "";
       return `
         <div class="card-item my-note-card" data-wine-id="${escapeHtml(w.wine_id)}">
-          <div class="title">${escapeHtml(w.name_ko || w.name_original || "이름 미상")}${w.vintage ? `<span class="vintage">${escapeHtml(w.vintage)}</span>` : ""}</div>
+          <div class="title">${escapeHtml(w.name_ko || w.name_original || "이름 미상")}${w.vintage ? `<span class="vintage">${escapeHtml(w.vintage)}</span>` : ""}${otherDevice}</div>
           ${meta.length ? `<div class="meta">${meta.map((m,i) => `<span${i===0?"":' class="dot"'}>${escapeHtml(m)}</span>`).join("")}</div>` : ""}
           ${score ? `<div style="margin-top:4px;">${score}</div>` : ""}
           ${n.comment ? `<div class="body">${escapeHtml(n.comment)}</div>` : ""}
@@ -1669,6 +1717,14 @@
   renderChips("aroma-chips", AROMA_OPTIONS, "aroma");
   renderChips("palate-chips", PALATE_OPTIONS, "palate");
   renderAdminUI();
+
+  // 내 노트 탭의 이름 입력 — 한 번만 등록
+  $("#my-name-input").value = savedName();
+  $("#my-name-input").addEventListener("input", e => {
+    localStorage.setItem(LS_NAME, e.target.value);
+    updateMyTabCount();
+    if (viewMode === "my") renderMyNotesGrid();
+  });
   if (API_URL.includes("REPLACE_WITH")) {
     $("#content-area").innerHTML = `<div class="empty"><strong>설정이 필요합니다</strong>index.html 상단의 API_URL 변수에 Apps Script 웹앱 URL을 붙여넣어 주세요.</div>`;
   } else {
