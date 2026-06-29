@@ -340,6 +340,45 @@
   }
   .error-msg.show { display: block; }
 
+  /* Chip selector for aroma/palate */
+  .chip-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .chip-cat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .chip-cat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    min-width: 56px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 11px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-size: 12px;
+    cursor: pointer;
+    background: #fff;
+    user-select: none;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .chip:hover { border-color: var(--hfk-red); }
+  .chip input { display: none; }
+  .chip:has(input:checked) {
+    background: var(--hfk-red);
+    color: #fff;
+    border-color: var(--hfk-red);
+  }
+
   .detail-info {
     background: var(--soft);
     border-radius: 10px;
@@ -729,12 +768,14 @@
           </div>
         </div>
         <div class="field">
-          <label>향 <span class="hint">아로마</span></label>
-          <textarea name="aroma" placeholder="블랙커런트, 삼나무, 가죽…"></textarea>
+          <label>향 <span class="hint">아로마 · 해당하는 것 모두 선택</span></label>
+          <div class="chip-group" id="aroma-chips"></div>
+          <input type="text" name="aroma_extra" placeholder="기타 향 (직접 입력, 쉼표로 구분)">
         </div>
         <div class="field">
-          <label>맛 <span class="hint">팔레트, 산미, 탄닌, 바디</span></label>
-          <textarea name="palate" placeholder="중간 산미와 단단한 탄닌…"></textarea>
+          <label>맛 <span class="hint">팔레트 · 해당하는 것 모두 선택</span></label>
+          <div class="chip-group" id="palate-chips"></div>
+          <input type="text" name="palate_extra" placeholder="기타 표현 (직접 입력, 쉼표로 구분)">
         </div>
         <div class="field">
           <label>종합 코멘트 *</label>
@@ -780,6 +821,22 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbwivKxCAoW2IUlxbpV4v4WsdtO5PkLQFCXRYaDvEBgxgsvuoDezl7BYdqOCuwj9b2VQ/exec";
   const SHARED_SECRET = "hfk1004";
 
+  // ==== 향·맛 칩 옵션 ====
+  const AROMA_OPTIONS = [
+    { cat: "과일", items: ["체리", "블랙커런트", "라즈베리", "자두", "딸기", "사과", "배", "복숭아", "자몽", "레몬"] },
+    { cat: "꽃", items: ["장미", "제비꽃", "자스민"] },
+    { cat: "향신료/허브", items: ["후추", "정향", "시나몬", "민트", "유칼립투스"] },
+    { cat: "오크·숙성", items: ["바닐라", "삼나무", "가죽", "담배", "초콜릿", "커피"] },
+    { cat: "흙·광물", items: ["흙", "미네랄", "부싯돌"] }
+  ];
+  const PALATE_OPTIONS = [
+    { cat: "산미", items: [{l:"낮음",v:"낮은 산미"},{l:"중간",v:"중간 산미"},{l:"높음",v:"높은 산미"}] },
+    { cat: "탄닌", items: [{l:"부드러움",v:"부드러운 탄닌"},{l:"중간",v:"중간 탄닌"},{l:"단단함",v:"단단한 탄닌"}] },
+    { cat: "바디", items: [{l:"라이트",v:"라이트 바디"},{l:"미디엄",v:"미디엄 바디"},{l:"풀",v:"풀 바디"}] },
+    { cat: "단맛", items: [{l:"드라이",v:"드라이"},{l:"오프드라이",v:"오프드라이"},{l:"미디엄스위트",v:"미디엄스위트"},{l:"스위트",v:"스위트"}] },
+    { cat: "여운", items: [{l:"짧음",v:"짧은 여운"},{l:"중간",v:"중간 여운"},{l:"김",v:"긴 여운"}] }
+  ];
+
   // ==== 상태 ====
   let sessions = [], wines = [], notes = [];
   let filterText = "";
@@ -817,6 +874,36 @@
     el.textContent = msg;
     el.classList.add("show");
   };
+
+  // ==== 칩 헬퍼 ====
+  function renderChips(containerId, options, name) {
+    const html = options.map(g => {
+      const items = g.items.map(it => {
+        const v = typeof it === "string" ? it : it.v;
+        const l = typeof it === "string" ? it : it.l;
+        return `<label class="chip"><input type="checkbox" name="${name}_chip" value="${escapeHtml(v)}"><span>${escapeHtml(l)}</span></label>`;
+      }).join("");
+      return `<div class="chip-cat"><span class="chip-cat-label">${escapeHtml(g.cat)}</span>${items}</div>`;
+    }).join("");
+    document.getElementById(containerId).innerHTML = html;
+  }
+  function knownValues(options) {
+    return options.flatMap(g => g.items.map(it => typeof it === "string" ? it : it.v));
+  }
+  function collectChipValue(form, prefix) {
+    const chips = [...form.querySelectorAll(`input[name=${prefix}_chip]:checked`)].map(i => i.value);
+    const extra = (form.elements[prefix + "_extra"]?.value || "").trim();
+    return [chips.join(", "), extra].filter(Boolean).join(", ");
+  }
+  function setChipValues(form, prefix, options, raw) {
+    const items = (raw || "").split(",").map(s => s.trim()).filter(Boolean);
+    const known = new Set(knownValues(options));
+    form.querySelectorAll(`input[name=${prefix}_chip]`).forEach(cb => {
+      cb.checked = items.includes(cb.value);
+    });
+    const extra = items.filter(i => !known.has(i)).join(", ");
+    if (form.elements[prefix + "_extra"]) form.elements[prefix + "_extra"].value = extra;
+  }
 
   // ==== localStorage ====
   const LS_NAME = "hfk-wine-name";
@@ -1303,8 +1390,8 @@
     form.elements["wine_id"].value = n.wine_id;
     form.elements["author"].value = n.author || "";
     form.elements["score"].value = n.score || "";
-    form.elements["aroma"].value = n.aroma || "";
-    form.elements["palate"].value = n.palate || "";
+    setChipValues(form, "aroma", AROMA_OPTIONS, n.aroma);
+    setChipValues(form, "palate", PALATE_OPTIONS, n.palate);
     form.elements["comment"].value = n.comment || "";
     form.elements["pairing"].value = n.pairing || "";
     $("#note-form-title").textContent = "노트 수정";
@@ -1339,6 +1426,11 @@
     showError("note-error", "");
     const fd = new FormData(e.target);
     const payload = Object.fromEntries(fd.entries());
+    // 칩에서 향·맛 조립 (텍스트 필드 대체)
+    payload.aroma = collectChipValue(e.target, "aroma");
+    payload.palate = collectChipValue(e.target, "palate");
+    delete payload.aroma_chip; delete payload.aroma_extra;
+    delete payload.palate_chip; delete payload.palate_extra;
     const btn = $("#note-submit");
     btn.disabled = true;
     const editing = !!editingNoteId;
@@ -1479,6 +1571,8 @@
   });
 
   // ==== 시작 ====
+  renderChips("aroma-chips", AROMA_OPTIONS, "aroma");
+  renderChips("palate-chips", PALATE_OPTIONS, "palate");
   renderAdminUI();
   if (API_URL.includes("REPLACE_WITH")) {
     $("#content-area").innerHTML = `<div class="empty"><strong>설정이 필요합니다</strong>index.html 상단의 API_URL 변수에 Apps Script 웹앱 URL을 붙여넣어 주세요.</div>`;
