@@ -486,6 +486,25 @@
   .mini-wine .name { font-weight: 600; font-size: 14px; }
   .mini-wine .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
+  .my-note-card .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .my-note-card .sub strong {
+    color: var(--text);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .my-note-card .body {
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    margin-top: 6px;
+  }
+
   .toast {
     position: fixed;
     bottom: 30px;
@@ -555,6 +574,7 @@
   <div class="view-tabs">
     <button class="view-tab active" data-view="wines">전체 와인</button>
     <button class="view-tab" data-view="sessions">세션별</button>
+    <button class="view-tab" data-view="my">내 노트</button>
   </div>
 
   <div class="toolbar" id="wines-toolbar">
@@ -1029,13 +1049,66 @@
   function render() {
     renderStats();
     renderAdminUI();
+    updateMyTabCount();
     if (viewMode === "wines") {
       $("#wines-toolbar").style.display = "";
       renderWineGrid();
-    } else {
+    } else if (viewMode === "sessions") {
       $("#wines-toolbar").style.display = "none";
       renderSessionGrid();
+    } else if (viewMode === "my") {
+      $("#wines-toolbar").style.display = "none";
+      renderMyNotesGrid();
     }
+  }
+
+  function updateMyTabCount() {
+    const tab = document.querySelector('.view-tab[data-view="my"]');
+    if (!tab) return;
+    const tokens = getTokens();
+    const count = Object.keys(tokens).filter(id => notes.some(n => n.note_id === id)).length;
+    tab.textContent = count > 0 ? `내 노트 (${count})` : "내 노트";
+  }
+
+  function renderMyNotesGrid() {
+    const area = $("#content-area");
+    const tokens = getTokens();
+    const myIds = new Set(Object.keys(tokens));
+    const myNotes = notes.filter(n => myIds.has(n.note_id));
+
+    if (myNotes.length === 0) {
+      area.innerHTML = `<div class="empty"><strong>아직 작성한 노트가 없습니다</strong>와인 카드를 클릭해 첫 노트를 남겨보세요.<br><br><span style="font-size:12px;">현재 브라우저에서 작성한 노트만 표시됩니다. 다른 기기·브라우저의 노트는 그 곳에서만 확인 가능합니다.</span></div>`;
+      return;
+    }
+
+    area.innerHTML = `<div class="grid">` + myNotes.map(n => {
+      const w = wines.find(x => x.wine_id === n.wine_id);
+      if (!w) return "";
+      const score = n.score ? `<span class="avg-star">★ ${escapeHtml(n.score)}</span>` : "";
+      const meta = [w.country, w.region, w.variety].filter(Boolean);
+      const subs = [];
+      if (n.aroma) subs.push(`<div class="sub"><strong>향</strong>${escapeHtml(n.aroma)}</div>`);
+      if (n.palate) subs.push(`<div class="sub"><strong>맛</strong>${escapeHtml(n.palate)}</div>`);
+      if (n.pairing) subs.push(`<div class="sub"><strong>페어링</strong>${escapeHtml(n.pairing)}</div>`);
+      const updated = n.updated_at && n.updated_at !== n.created_at ? ` <span style="color:var(--muted);">(수정됨)</span>` : "";
+      return `
+        <div class="card-item my-note-card" data-wine-id="${escapeHtml(w.wine_id)}">
+          <div class="title">${escapeHtml(w.name_ko || w.name_original || "이름 미상")}${w.vintage ? `<span class="vintage">${escapeHtml(w.vintage)}</span>` : ""}</div>
+          ${meta.length ? `<div class="meta">${meta.map((m,i) => `<span${i===0?"":' class="dot"'}>${escapeHtml(m)}</span>`).join("")}</div>` : ""}
+          ${score ? `<div style="margin-top:4px;">${score}</div>` : ""}
+          ${n.comment ? `<div class="body">${escapeHtml(n.comment)}</div>` : ""}
+          ${subs.join("")}
+          <div class="footer">
+            <span>${fmtDateShort((n.created_at || "").slice(0, 10))} 작성${updated}</span>
+            <span style="color:var(--muted);">자세히 →</span>
+          </div>
+        </div>
+      `;
+    }).filter(Boolean).join("") + `</div>`;
+
+    $$(".my-note-card").forEach(card => {
+      card.addEventListener("click", () => openWineDetail(card.dataset.wineId));
+    });
   }
 
   function renderWineGrid() {
