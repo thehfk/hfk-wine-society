@@ -359,6 +359,11 @@
     font-weight: 600;
     min-width: 56px;
   }
+  .chip-cat-desc {
+    font-weight: 400;
+    opacity: 0.75;
+    margin-left: 4px;
+  }
   .chip {
     display: inline-flex;
     align-items: center;
@@ -830,9 +835,9 @@
     { cat: "흙·광물", items: ["흙", "미네랄", "부싯돌"] }
   ];
   const PALATE_OPTIONS = [
-    { cat: "산미", items: [{l:"낮음",v:"낮은 산미"},{l:"중간",v:"중간 산미"},{l:"높음",v:"높은 산미"}] },
-    { cat: "탄닌", items: [{l:"부드러움",v:"부드러운 탄닌"},{l:"중간",v:"중간 탄닌"},{l:"단단함",v:"단단한 탄닌"}] },
-    { cat: "바디", items: [{l:"라이트",v:"라이트 바디"},{l:"미디엄",v:"미디엄 바디"},{l:"풀",v:"풀 바디"}] },
+    { cat: "산미", desc: "(침이 고이는 새콤함)", items: [{l:"낮음",v:"낮은 산미"},{l:"중간",v:"중간 산미"},{l:"높음",v:"높은 산미"}] },
+    { cat: "탄닌", desc: "(입안의 텁텁함)", items: [{l:"부드러움",v:"부드러운 탄닌"},{l:"중간",v:"중간 탄닌"},{l:"단단함",v:"단단한 탄닌"}] },
+    { cat: "바디", desc: "(와인의 무게감)", items: [{l:"라이트",v:"라이트 바디"},{l:"미디엄",v:"미디엄 바디"},{l:"풀",v:"풀 바디"}] },
     { cat: "단맛", items: [{l:"드라이",v:"드라이"},{l:"오프드라이",v:"오프드라이"},{l:"미디엄스위트",v:"미디엄스위트"},{l:"스위트",v:"스위트"}] },
     { cat: "여운", items: [{l:"짧음",v:"짧은 여운"},{l:"중간",v:"중간 여운"},{l:"김",v:"긴 여운"}] }
   ];
@@ -883,7 +888,10 @@
         const l = typeof it === "string" ? it : it.l;
         return `<label class="chip"><input type="checkbox" name="${name}_chip" value="${escapeHtml(v)}"><span>${escapeHtml(l)}</span></label>`;
       }).join("");
-      return `<div class="chip-cat"><span class="chip-cat-label">${escapeHtml(g.cat)}</span>${items}</div>`;
+      const labelHtml = g.desc
+        ? `${escapeHtml(g.cat)}<span class="chip-cat-desc">${escapeHtml(g.desc)}</span>`
+        : escapeHtml(g.cat);
+      return `<div class="chip-cat"><span class="chip-cat-label">${labelHtml}</span>${items}</div>`;
     }).join("");
     document.getElementById(containerId).innerHTML = html;
   }
