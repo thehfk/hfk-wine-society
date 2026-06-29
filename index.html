@@ -854,18 +854,32 @@
   const $$ = sel => document.querySelectorAll(sel);
   const escapeHtml = s => String(s || "").replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // 날짜 정규화: YYYY-MM-DD, ISO, Date toString 등 모두 처리. 시간은 항상 제거.
+  function normalizeDate(s) {
+    if (!s) return null;
+    const str = String(s);
+    let m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { y: m[1], mo: m[2], da: m[3] };
+    const d = new Date(str);
+    if (isNaN(d.getTime())) return null;
+    const fmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    });
+    const parts = fmt.formatToParts(d);
+    const get = t => (parts.find(p => p.type === t) || {}).value;
+    return { y: get('year'), mo: get('month'), da: get('day') };
+  }
   const fmtDate = s => {
-    if (!s) return "";
-    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!m) return s;
-    const d = new Date(s);
+    const n = normalizeDate(s);
+    if (!n) return s || "";
+    const d = new Date(Date.UTC(parseInt(n.y), parseInt(n.mo) - 1, parseInt(n.da)));
     const days = ["일","월","화","수","목","금","토"];
-    return `${parseInt(m[2])}월 ${parseInt(m[3])}일 (${days[d.getDay()]})`;
+    return `${parseInt(n.mo)}월 ${parseInt(n.da)}일 (${days[d.getUTCDay()]})`;
   };
   const fmtDateShort = s => {
-    if (!s) return "";
-    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    return m ? `${m[1]}.${m[2]}.${m[3]}` : s;
+    const n = normalizeDate(s);
+    return n ? `${n.y}.${n.mo}.${n.da}` : (s || "");
   };
   const showToast = msg => {
     const t = $("#toast");
@@ -1301,7 +1315,7 @@
 
     const sess = w.session_id ? sessionById(w.session_id) : null;
     const rows = [
-      ["세션", sess ? sess.name + " (" + fmtDateShort(sess.session_date) + ")" : ""],
+      ["세션", sess ? sess.name : ""],
       ["원문명", w.name_original],
       ["생산자", w.producer],
       ["국가 · 지역", [w.country, w.region].filter(Boolean).join(" · ")],
